@@ -165,4 +165,3 @@ if ! grep -q 'alias pia-client=' ~/.bashrc; then
   echo 'alias pia-client="/home/$USER/PortSync_Config/alias_portsync.sh"' >> ~/.bashrc
 fi && \
 source ~/.bashrc && \
-cat /tmp/port_changer.log
