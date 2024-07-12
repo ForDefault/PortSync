@@ -39,9 +39,8 @@ while true; do
     # Wait a moment before reopening
     sleep 3
 
-    # Reopen the PIA GUI with the correct environment settings and command
     while ! pgrep -x "pia-client" > /dev/null; do
-      nohup env XDG_SESSION_TYPE=X11 /opt/piavpn/bin/pia-client %u &
+      /home/YOURNAME/PortSync_Config/launchPIA.sh &> /dev/null
       echo "Trying to reopen PIA client..."
       sleep 1
     done
@@ -139,6 +138,8 @@ else
   fi
 fi' > /home/YOURNAME/PortSync_Config/port_changer.sh && \
 chmod +x /home/YOURNAME/PortSync_Config/port_changer.sh && \
+echo 'su YOURNAME -c "nohup env XDG_SESSION_TYPE=X11 /opt/piavpn/bin/pia-client %u &"' > /home/YOURNAME/PortSync_Config/launchPIA.sh && \
+chmod +x /home/YOURNAME/PortSync_Config/launchPIA.sh && \
 sudo bash -c 'cat > /etc/systemd/system/port_changer.service <<EOF
 [Unit]
 Description=Change Port for qBittorrent upon startup
