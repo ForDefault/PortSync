@@ -23,12 +23,6 @@ echo "Interface wgpia0 is up."
 
 sleep 3
 
-# Wait for the wgpia0 interface to connect
-while ! ip link show wgpia0 > /dev/null 2>&1; do
-  echo "Waiting for wgpia0 interface..."
-  sleep 1
-done
-
 # Loop until the public IP is correctly retrieved
 while true; do
   pubip=$(piactl get pubip)
@@ -124,11 +118,25 @@ else
   echo "Port $port has been added to UFW."
 fi
 
-# Check if the old port is in UFW and delete it if it is
-if sudo ufw status | grep -q "$old_port"; then
-  echo "Old port $old_port is in UFW. Deleting old port from UFW."
-  sudo ufw delete allow $old_port
-  echo "Old port $old_port has been deleted from UFW."
+# Double-checking logic for old port removal
+if [ "$old_port" == "$port" ]; then
+  echo "Old Port same as New Port, no action needed for UFW removal."
+else
+  if [ "$old_port" != "$port" ]; then
+    for i in {1..3}; do
+      if sudo ufw status | grep -q "$old_port"; then
+        echo "Old port $old_port is in UFW. Deleting old port from UFW."
+        sudo ufw delete allow $old_port
+        echo "Old port $old_port has been deleted from UFW."
+      else
+        echo "Old port $old_port is not in UFW."
+        if [ $i -eq 2 ]; then
+          break
+        fi
+      fi
+      sleep 1
+    done
+  fi
 fi' > /home/$USER/PortSync_Config/port_changer.sh && \
 chmod +x /home/$USER/PortSync_Config/port_changer.sh && \
 sudo bash -c 'cat > /etc/systemd/system/port_changer.service <<EOF
