@@ -41,7 +41,7 @@ while true; do
 
     # Reopen the PIA GUI with the correct environment settings and command
     while ! pgrep -x "pia-client" > /dev/null; do
-      nohup env XDG_SESSION_TYPE=X11 /opt/piavpn/bin/pia-client %u &
+      nohup env XDG_SESSION_TYPE=X11 /opt/piavpn/bin/pia-client %u & disown
       echo "Trying to reopen PIA client..."
       sleep 1
     done
