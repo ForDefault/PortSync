@@ -41,7 +41,7 @@ while true; do
 
     # Reopen the PIA GUI with the correct environment settings and command
     while ! pgrep -x "pia-client" > /dev/null; do
-      nohup env XDG_SESSION_TYPE=X11 /opt/piavpn/bin/pia-client %u & disown
+      nohup env XDG_SESSION_TYPE=X11 /opt/piavpn/bin/pia-client %u &
       echo "Trying to reopen PIA client..."
       sleep 1
     done
@@ -79,12 +79,12 @@ port=$(sudo piactl get portforward)
 echo "Retrieved port: $port"
 
 # Update qBittorrent configuration file
-config_file="/home/$USER/.config/qBittorrent/qBittorrent.conf"
+config_file="/home/YOURNAME/.config/qBittorrent/qBittorrent.conf"
 sudo sed -i "s/Session\\\\Port=.*/Session\\\\Port=$port/" $config_file
 echo "Configuration file updated."
 
 # Define the path for old ports
-old_port_path="/home/$USER/PortSync_Config"
+old_port_path="/home/YOURNAME/PortSync_Config"
 mkdir -p "$old_port_path"
 old_port_file="$old_port_path/old.port.check.txt"
 
@@ -137,8 +137,8 @@ else
       sleep 1
     done
   fi
-fi' > /home/$USER/PortSync_Config/port_changer.sh && \
-chmod +x /home/$USER/PortSync_Config/port_changer.sh && \
+fi' > /home/YOURNAME/PortSync_Config/port_changer.sh && \
+chmod +x /home/YOURNAME/PortSync_Config/port_changer.sh && \
 sudo bash -c 'cat > /etc/systemd/system/port_changer.service <<EOF
 [Unit]
 Description=Change Port for qBittorrent upon startup
@@ -146,10 +146,9 @@ After=network.target
 
 [Service]
 Type=simple
-User=$USER
-Environment=DISPLAY=:0
-ExecStart=/bin/bash -c "sleep 10 && /home/$USER/PortSync_Config/port_changer.sh"
+ExecStart=/home/YOURNAME/PortSync_Config/port_changer.sh
 Restart=on-failure
+User=root
 
 [Install]
 WantedBy=multi-user.target
@@ -157,12 +156,12 @@ EOF' && \
 echo '#!/bin/bash
 # Execute with passed arguments
 "$@" && touch /tmp/port_changer_trigger
-' >/home/$USER/PortSync_Config/alias_portsync.sh && \
-chmod +x /home/$USER/PortSync_Config/alias_portsync.sh && \
+' >/home/YOURNAME/PortSync_Config/alias_portsync.sh && \
+chmod +x /home/YOURNAME/PortSync_Config/alias_portsync.sh && \
 sudo systemctl daemon-reload && \
 sudo systemctl start port_changer.service && \
 sudo systemctl enable port_changer.service && \
 if ! grep -q 'alias pia-client=' ~/.bashrc; then
-  echo 'alias pia-client="/home/$USER/PortSync_Config/alias_portsync.sh"' >> ~/.bashrc
+  echo 'alias pia-client="/home/YOURNAME/PortSync_Config/alias_portsync.sh"' >> ~/.bashrc
 fi && \
 source ~/.bashrc
