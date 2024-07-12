@@ -153,11 +153,16 @@ User=root
 [Install]
 WantedBy=multi-user.target
 EOF' && \
+echo '#!/bin/bash
+# Execute with passed arguments
+"$@" && touch /tmp/port_changer_trigger
+' >/home/$USER/PortSync_Config/alias_portsync.sh && \
+chmod +x /home/$USER/PortSync_Config/alias_portsync.sh && \
 sudo systemctl daemon-reload && \
 sudo systemctl start port_changer.service && \
 sudo systemctl enable port_changer.service && \
 if ! grep -q 'alias pia-client=' ~/.bashrc; then
-  echo 'alias pia-client="(nohup /opt/piavpn/bin/pia-client %u &) && sudo systemctl start port_changer.service"' >> ~/.bashrc
+  echo 'alias pia-client="/home/$USER/PortSync_Config/alias_portsync.sh"' >> ~/.bashrc
 fi && \
 source ~/.bashrc && \
 cat /tmp/port_changer.log
