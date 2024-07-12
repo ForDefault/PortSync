@@ -37,13 +37,13 @@
 ## Install
 ```
 PUTHERE=$(whoami) && \
-REPO_URL="https://github.com/ForDefault/qbittorrent_automatic_forward_port_changer.git" && \
+REPO_URL="https://github.com/ForDefault/PortSync.git" && \
 REPO_NAME=$(basename $REPO_URL .git) && \
 git clone $REPO_URL && \
 cd $REPO_NAME && \
-sed -i "s|/home/\YOURNAME|/home/$PUTHERE|g" for_pia_install.sh && \
-chmod +x for_pia_install.sh && \
-./for_pia_install.sh && \
+sed -i "s|/home/\YOURNAME|/home/$PUTHERE|g" PortSync_install.sh && \
+chmod +x PortSync_install.sh && \
+./PortSync_install.sh && \
 cd .. && rm -rf $REPO_NAME
 
 ```
