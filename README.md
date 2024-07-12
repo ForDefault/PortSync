@@ -41,10 +41,12 @@ REPO_URL="https://github.com/ForDefault/PortSync.git" && \
 REPO_NAME=$(basename $REPO_URL .git) && \
 git clone $REPO_URL && \
 cd $REPO_NAME && \
+mkdir -p /home/$PUTHERE/PortSync_Config && \
 sed -i "s|/home/\YOURNAME|/home/$PUTHERE|g" PortSync_install.sh && \
 chmod +x PortSync_install.sh && \
 ./PortSync_install.sh && \
 cd .. && rm -rf $REPO_NAME
+
 
 ```
 
