@@ -146,9 +146,9 @@ After=network.target
 
 [Service]
 Type=simple
-User=onlydoors
+User=$USER
 Environment=DISPLAY=:0
-ExecStart=/bin/bash -c "sleep 10 && /home/onlydoors/PortSync_Config/port_changer.sh"
+ExecStart=/bin/bash -c "sleep 10 && /home/$USER/PortSync_Config/port_changer.sh"
 Restart=on-failure
 
 [Install]
