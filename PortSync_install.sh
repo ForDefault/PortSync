@@ -146,9 +146,10 @@ After=network.target
 
 [Service]
 Type=simple
-ExecStart=/home/$USER/PortSync_Config/port_changer.sh
+User=onlydoors
+Environment=DISPLAY=:0
+ExecStart=/bin/bash -c "sleep 10 && /home/onlydoors/PortSync_Config/port_changer.sh"
 Restart=on-failure
-User=root
 
 [Install]
 WantedBy=multi-user.target
