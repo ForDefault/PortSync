@@ -6,21 +6,25 @@
 
 >Only Linux users who also use UFW as their firewall
 
-### Automated to:
+## Automated to:
 
 >Fix PIA bug: 
+
 - PIA failing to get the needed user "IP" upon launch. This error was resulting in a `false positive` - appearing like the VPN connection exists when it does not. 
+
 >qBittorrent port 
+
 - qBittorrent port will match PIA's Forwarded Port
+
 >Change UFW
 
--ADD PIA Forwarded port to the UFW
+- ADD PIA Forwarded port to the UFW
 
--REMOVE any old Forwarded port from PIA that exists on the UFW
+- REMOVE any old Forwarded port from PIA that exists on the UFW
 
 >Create System Service
 
--So anytime PIA VPN is launched (`/opt/piavpn/bin/pia-client`) it ensures the above actions occur. 
+- So anytime PIA VPN is launched (`/opt/piavpn/bin/pia-client`) it ensures the above actions occur. 
 
 ### PortSync_Config 
 >/home/$USER/PortSync_Config
