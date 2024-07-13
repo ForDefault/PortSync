@@ -1,6 +1,6 @@
 # Create the port_changer.sh script
 echo '#!/bin/bash
-exec > /home/onlydoors/PortSync_Config/port_changer.log 2>&1
+exec > /home/YOURNAME/PortSync_Config/port_changer.log 2>&1
 echo "Starting script..."
 
 # Wait for PIA client process to launch
@@ -73,12 +73,12 @@ port=$(sudo piactl get portforward)
 echo "Retrieved port: $port"
 
 # Update qBittorrent configuration file
-config_file="/home/onlydoors/.config/qBittorrent/qBittorrent.conf"
+config_file="/home/YOURNAME/.config/qBittorrent/qBittorrent.conf"
 sudo sed -i "s/Session\\\\Port=.*/Session\\\\Port=$port/" $config_file
 echo "Configuration file updated."
 
 # Define the path for old ports
-old_port_path="/home/onlydoors/PortSync_Config"
+old_port_path="/home/YOURNAME/PortSync_Config"
 mkdir -p "$old_port_path"
 old_port_file="$old_port_path/old.port.check.txt"
 
@@ -131,13 +131,13 @@ else
       sleep 1
     done
   fi
-fi' > /home/onlydoors/PortSync_Config/port_changer.sh && \
-chmod +x /home/onlydoors/PortSync_Config/port_changer.sh
+fi' > /home/YOURNAME/PortSync_Config/port_changer.sh && \
+chmod +x /home/YOURNAME/PortSync_Config/port_changer.sh
 
 # Create the launchPIA.sh script
 echo '#!/bin/bash
-nohup env XDG_SESSION_TYPE=X11 /opt/piavpn/bin/pia-client %u &> /dev/null &' > /home/onlydoors/PortSync_Config/launchPIA.sh && \
-chmod +x /home/onlydoors/PortSync_Config/launchPIA.sh
+nohup env XDG_SESSION_TYPE=X11 /opt/piavpn/bin/pia-client %u &> /dev/null &' > /home/YOURNAME/PortSync_Config/launchPIA.sh && \
+chmod +x /home/YOURNAME/PortSync_Config/launchPIA.sh
 
 # Create the port_changer.service file
 sudo bash -c 'cat > /etc/systemd/system/port_changer.service <<EOF
@@ -147,7 +147,7 @@ After=network.target
 
 [Service]
 Type=simple
-ExecStart=/home/onlydoors/PortSync_Config/port_changer.sh
+ExecStart=/home/YOURNAME/PortSync_Config/port_changer.sh
 Restart=on-failure
 User=root
 
@@ -163,9 +163,9 @@ After=network.target
 
 [Service]
 Type=simple
-ExecStart=/home/onlydoors/PortSync_Config/launchPIA.sh
+ExecStart=/home/YOURNAME/PortSync_Config/launchPIA.sh
 Restart=on-failure
-User=onlydoors
+User=YOURNAME
 
 [Install]
 WantedBy=multi-user.target
@@ -175,12 +175,12 @@ EOF'
 echo '#!/bin/bash
 # Execute with passed arguments
 "$@" && touch /tmp/port_changer_trigger
-' >/home/onlydoors/PortSync_Config/alias_portsync.sh && \
-chmod +x /home/onlydoors/PortSync_Config/alias_portsync.sh
+' >/home/YOURNAME/PortSync_Config/alias_portsync.sh && \
+chmod +x /home/YOURNAME/PortSync_Config/alias_portsync.sh
 
 # Add alias to .bashrc if not present
 if ! grep -q 'alias pia-client=' ~/.bashrc; then
-  echo 'alias pia-client="/home/onlydoors/PortSync_Config/alias_portsync.sh"' >> ~/.bashrc
+  echo 'alias pia-client="/home/YOURNAME/PortSync_Config/alias_portsync.sh"' >> ~/.bashrc
 fi
 
 # Reload the systemd daemon and enable the services
