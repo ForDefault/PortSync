@@ -46,7 +46,7 @@ fi && \
 git clone $REPO_URL "$DEST_DIR" && \
 cd "$DEST_DIR" && \
 mkdir -p /home/$PUTHERE/PortSync_Config && \
-sed -i "s|/home/YOURNAME|/home/$PUTHERE|g" PortSync_install.sh && \
+sed -i "s|YOURNAME|$PUTHERE|g" PortSync_install.sh && \
 chmod +x PortSync_install.sh && \
 echo installing && \
 ./PortSync_install.sh && \
