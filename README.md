@@ -51,9 +51,11 @@ chmod +x PortSync_install.sh && \
 echo installing && \
 ./PortSync_install.sh && \
 cd .. && rm -rf "$DEST_DIR" && \
-echo running && \
-/home/$PUTHERE/PortSync_Config/port_changer.sh && \
-cat /tmp/port_changer.log
+echo Waiting for PIA to start && \
+while ! pgrep -x "pia-client" > /dev/null; do
+  echo "Waiting for PIA client..."
+  sleep 1
+done
 ```
 
 ## What PortSync Does (short form)
