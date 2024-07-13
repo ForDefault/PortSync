@@ -40,7 +40,7 @@ while true; do
     sleep 3
 
     while ! pgrep -x "pia-client" > /dev/null; do
-      /home/YOURNAME/PortSync_Config/launchPIA.sh &> /dev/null
+      su - YOURNAME -c "/home/YOURNAME/PortSync_Config/launchPIA.sh" &> /dev/null
       echo "Trying to reopen PIA client..."
       sleep 1
     done
@@ -138,7 +138,7 @@ else
   fi
 fi' > /home/YOURNAME/PortSync_Config/port_changer.sh && \
 chmod +x /home/YOURNAME/PortSync_Config/port_changer.sh && \
-echo 'su YOURNAME -c "nohup env XDG_SESSION_TYPE=X11 /opt/piavpn/bin/pia-client %u &"' > /home/YOURNAME/PortSync_Config/launchPIA.sh && \
+echo 'nohup env XDG_SESSION_TYPE=X11 /opt/piavpn/bin/pia-client %u' > /home/YOURNAME/PortSync_Config/launchPIA.sh && \
 chmod +x /home/YOURNAME/PortSync_Config/launchPIA.sh && \
 sudo bash -c 'cat > /etc/systemd/system/port_changer.service <<EOF
 [Unit]
