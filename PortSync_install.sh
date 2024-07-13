@@ -3,7 +3,7 @@ exec > /tmp/port_changer.log 2>&1
 echo "Starting script..."
 
 # Prompt for sudo password upfront
-sudo -v
+#sudo -v
 
 # Wait for PIA client process to launch
 while ! pgrep -x "pia-client" > /dev/null; do
