@@ -160,10 +160,10 @@ echo '#!/bin/bash
 "$@" && touch /tmp/port_changer_trigger
 ' >/home/YOURNAME/PortSync_Config/alias_portsync.sh && \
 chmod +x /home/YOURNAME/PortSync_Config/alias_portsync.sh && \
-sudo systemctl daemon-reload && \
-sudo systemctl start port_changer.service && \
-sudo systemctl enable port_changer.service && \
 if ! grep -q 'alias pia-client=' ~/.bashrc; then
   echo 'alias pia-client="/home/YOURNAME/PortSync_Config/alias_portsync.sh"' >> ~/.bashrc
 fi && \
+sudo systemctl daemon-reload && \
+sudo systemctl start port_changer.service && \
+sudo systemctl enable port_changer.service && \
 source ~/.bashrc
