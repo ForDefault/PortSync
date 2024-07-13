@@ -138,7 +138,8 @@ else
   fi
 fi' > /home/YOURNAME/PortSync_Config/port_changer.sh && \
 chmod +x /home/YOURNAME/PortSync_Config/port_changer.sh && \
-echo 'nohup env XDG_SESSION_TYPE=X11 /opt/piavpn/bin/pia-client %u' > /home/YOURNAME/PortSync_Config/launchPIA.sh && \
+echo '#!/bin/bash
+nohup env XDG_SESSION_TYPE=X11 /opt/piavpn/bin/pia-client %u &> /dev/null &' > /home/YOURNAME/PortSync_Config/launchPIA.sh && \
 chmod +x /home/YOURNAME/PortSync_Config/launchPIA.sh && \
 sudo bash -c 'cat > /etc/systemd/system/port_changer.service <<EOF
 [Unit]
