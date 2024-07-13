@@ -39,39 +39,35 @@ while true; do
     # Wait a moment before reopening
     sleep 3
 
-    # Missing closing brace for the inner while loop
-    while ! pgrep -x "pia-client" > /dev/null; do
-      su - YOURNAME -c "/home/YOURNAME/PortSync_Config/launchPIA.sh" > /home/YOURNAME/PortSync_Config/launchPIA.log 2>&1
-      echo "Trying to reopen PIA client..." >> /home/YOURNAME/PortSync_Config/launchPIA.log
-      sleep 1
-    done
-
-    echo "PIA client reopened and detected."
-
-    # Wait for the wgpia0 interface to connect
-    while ! ip link show wgpia0 > /dev/null 2>&1; do
-      echo "Waiting for wgpia0 interface..."
-      sleep 1
-    done
-
-    echo "Interface wgpia0 is up."
-
-    sleep 5
-
-    # Wait for PIA client process to launch
-    while ! pgrep -x "pia-client" > /dev/null; do
-      echo "Waiting for PIA client..."
-      sleep 1
-    done
-
-    echo "PIA client detected."
-
-    # Wait for the wgpia0 interface to connect
-    while ! ip link show wgpia0 > /dev/null 2>&1; do
-      echo "Waiting for wgpia0 interface..."
-      sleep 1
-    done
+    # Trigger the second service to launch the PIA client as the user
+    sudo systemctl start launchPIA.service
   fi
+done
+
+echo "PIA client reopened and detected."
+
+# Wait for the wgpia0 interface to connect
+while ! ip link show wgpia0 > /dev/null 2>&1; do
+  echo "Waiting for wgpia0 interface..."
+  sleep 1
+done
+
+echo "Interface wgpia0 is up."
+
+sleep 5
+
+# Wait for PIA client process to launch
+while ! pgrep -x "pia-client" > /dev/null; do
+  echo "Waiting for PIA client..."
+  sleep 1
+done
+
+echo "PIA client detected."
+
+# Wait for the wgpia0 interface to connect
+while ! ip link show wgpia0 > /dev/null 2>&1; do
+  echo "Waiting for wgpia0 interface..."
+  sleep 1
 done
 
 # Retrieve the forwarded port using piactl
@@ -152,6 +148,20 @@ Type=simple
 ExecStart=/home/YOURNAME/PortSync_Config/port_changer.sh
 Restart=on-failure
 User=root
+
+[Install]
+WantedBy=multi-user.target
+EOF' && \
+sudo bash -c 'cat > /etc/systemd/system/launchPIA.service <<EOF
+[Unit]
+Description=Launch PIA Client
+After=network.target
+
+[Service]
+Type=simple
+ExecStart=/home/YOURNAME/PortSync_Config/launchPIA.sh
+Restart=on-failure
+User=YOURNAME
 
 [Install]
 WantedBy=multi-user.target
