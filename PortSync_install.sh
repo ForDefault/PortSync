@@ -1,9 +1,7 @@
+# Create the port_changer.sh script
 echo '#!/bin/bash
-exec > /tmp/port_changer.log 2>&1
+exec > /home/onlydoors/PortSync_Config/port_changer.log 2>&1
 echo "Starting script..."
-
-# Prompt for sudo password upfront
-#sudo -v
 
 # Wait for PIA client process to launch
 while ! pgrep -x "pia-client" > /dev/null; do
@@ -75,12 +73,12 @@ port=$(sudo piactl get portforward)
 echo "Retrieved port: $port"
 
 # Update qBittorrent configuration file
-config_file="/home/YOURNAME/.config/qBittorrent/qBittorrent.conf"
+config_file="/home/onlydoors/.config/qBittorrent/qBittorrent.conf"
 sudo sed -i "s/Session\\\\Port=.*/Session\\\\Port=$port/" $config_file
 echo "Configuration file updated."
 
 # Define the path for old ports
-old_port_path="/home/YOURNAME/PortSync_Config"
+old_port_path="/home/onlydoors/PortSync_Config"
 mkdir -p "$old_port_path"
 old_port_file="$old_port_path/old.port.check.txt"
 
@@ -126,55 +124,12 @@ else
         echo "Old port $old_port has been deleted from UFW."
       else
         echo "Old port $old_port is not in UFW."
-        if [ $i -eq 2 ]; then
+        if [ $i -eq 2]; then
           break
         fi
       fi
       sleep 1
     done
   fi
-fi' > /home/YOURNAME/PortSync_Config/port_changer.sh && \
-chmod +x /home/YOURNAME/PortSync_Config/port_changer.sh && \
-echo '#!/bin/bash
-nohup env XDG_SESSION_TYPE=X11 /opt/piavpn/bin/pia-client %u &> /dev/null &' > /home/YOURNAME/PortSync_Config/launchPIA.sh && \
-chmod +x /home/YOURNAME/PortSync_Config/launchPIA.sh && \
-sudo bash -c 'cat > /etc/systemd/system/port_changer.service <<EOF
-[Unit]
-Description=Change Port for qBittorrent upon startup
-After=network.target
-
-[Service]
-Type=simple
-ExecStart=/home/YOURNAME/PortSync_Config/port_changer.sh
-Restart=on-failure
-User=root
-
-[Install]
-WantedBy=multi-user.target
-EOF' && \
-sudo bash -c 'cat > /etc/systemd/system/launchPIA.service <<EOF
-[Unit]
-Description=Launch PIA Client
-After=network.target
-
-[Service]
-Type=simple
-ExecStart=/home/YOURNAME/PortSync_Config/launchPIA.sh
-Restart=on-failure
-User=YOURNAME
-
-[Install]
-WantedBy=multi-user.target
-EOF' && \
-echo '#!/bin/bash
-# Execute with passed arguments
-"$@" && touch /tmp/port_changer_trigger
-' >/home/YOURNAME/PortSync_Config/alias_portsync.sh && \
-chmod +x /home/YOURNAME/PortSync_Config/alias_portsync.sh && \
-if ! grep -q 'alias pia-client=' ~/.bashrc; then
-  echo 'alias pia-client="/home/YOURNAME/PortSync_Config/alias_portsync.sh"' >> ~/.bashrc
-fi && \
-sudo systemctl daemon-reload && \
-sudo systemctl start port_changer.service && \
-sudo systemctl enable port_changer.service && \
-source ~/.bashrc
+fi' > /home/onlydoors/PortSync_Config/port_changer.sh && \
+chmod +x /home/onlydoors/PortSync_Config/port_changer.sh
