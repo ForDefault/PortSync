@@ -40,7 +40,7 @@ while true; do
     sleep 3
 
     while ! pgrep -x "pia-client" > /dev/null; do
-su - $YOURNAME -c "/home/$YOURNAME/PortSync_Config/launchPIA.sh" > /home/$YOURNAME/PortSync_Config/launchPIA.log 2>&1      echo "Trying to reopen PIA client..."
+su - YOURNAME -c "/home/YOURNAME/PortSync_Config/launchPIA.sh" > /home/YOURNAME/PortSync_Config/launchPIA.log 2>&1      echo "Trying to reopen PIA client..."
       sleep 1
     done
 
