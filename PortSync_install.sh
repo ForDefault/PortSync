@@ -36,14 +36,10 @@ while true; do
         break 2  # Break out of both loops if new IP is valid
       else
         echo "Public IP still not detected, retrying..."
-        sleep 3
-
-        # Close the PIA GUI
-        killall pia-client
-        sleep 2
+        sleep 1
         # disconnect
         while ! piactl disconnect > /dev/null
-        sleep 1
+        sleep 3
         #reconnect
         while ! piactl connect > /dev/null
       fi
@@ -120,7 +116,7 @@ else
   fi
 fi
 ' > /home/YOURNAME/PortSync_Config/port_changer.sh && \
-chmod +x /home/YOURNAME/PortSync_Config/port_changer.sh
+chmod +x /home/YOURNAME/PortSync_Config/port_changer.sh && \
 
 # Create the port_changer.service file
 sudo bash -c 'cat > /etc/systemd/system/port_changer.service <<EOF
@@ -130,13 +126,13 @@ After=network.target
 
 [Service]
 Type=simple
-ExecStart=/home/onlydoors/PortSync_Config/port_changer.sh
+ExecStart=/home/YOURNAME/PortSync_Config/port_changer.sh
 Restart=on-failure
 User=root
 
 [Install]
 WantedBy=multi-user.target
-EOF'
+EOF' && \
 
 sudo bash -c 'cat > /etc/systemd/system/port_changer.path <<EOF
 [Unit]
@@ -147,14 +143,14 @@ PathChanged=/tmp/port_changer_trigger
 
 [Install]
 WantedBy=multi-user.target
-EOF'
+EOF' && \
 
 # Create the alias_portsync.sh script
 echo '#!/bin/bash
 # Execute with passed arguments
 "$@" && touch /tmp/port_changer_trigger
 ' >/home/YOURNAME/PortSync_Config/alias_portsync.sh && \
-chmod +x /home/YOURNAME/PortSync_Config/alias_portsync.sh
+chmod +x /home/YOURNAME/PortSync_Config/alias_portsync.sh && \
 
 # Add alias to .bashrc if not present
 if ! grep -q 'alias pia-client=' ~/.bashrc; then
