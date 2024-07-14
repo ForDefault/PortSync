@@ -44,8 +44,8 @@ while true; do
         # Wait a moment before reopening
         sleep 3
 
-        # Create the trigger file to start the PIA service again
-        touch /tmp/launchPIA_trigger
+        # Launch the redirect.sh as sudo to make launchPIA.sh run
+        sudo /home/YOURNAME/PortSync_Config/redirect.sh
       fi
     done
   fi
@@ -123,54 +123,6 @@ fi
 chmod +x /home/YOURNAME/PortSync_Config/port_changer.sh
 
 
-# Create the port_changer.service file
-sudo bash -c 'cat > /etc/systemd/system/port_changer.service <<EOF
-[Unit]
-Description=Change Port for qBittorrent upon startup
-After=network.target
-
-[Service]
-Type=simple
-ExecStart=/home/YOURNAME/PortSync_Config/port_changer.sh
-Restart=on-failure
-User=root
-
-[Install]
-WantedBy=multi-user.target
-EOF'
-
-# Create the launchPIA.service file
-sudo bash -c 'cat > /etc/systemd/system/launchPIA.service <<EOF
-[Unit]
-Description=Launch PIA Client
-After=network.target
-
-[Service]
-Type=simple
-ExecStart=/home/YOURNAME/PortSync_Config/redirect.sh
-Restart=on-failure
-RestartSec=10
-User=YOURNAME
-Environment=XDG_SESSION_TYPE=x11
-Environment=DISPLAY=:0
-
-
-[Install]
-WantedBy=multi-user.target
-EOF'
-
-# Create the launchPIA.path file
-sudo bash -c 'cat > /etc/systemd/system/launchPIA.path <<EOF
-[Unit]
-Description=Path Unit for Launch PIA Client
-
-[Path]
-PathExists=/tmp/launchPIA_trigger
-
-[Install]
-WantedBy=multi-user.target
-EOF'
-
 echo '#!/bin/bash
 su YOURNAME /home/YOURNAME/PortSync_Config/launchPIA.sh ' > /home/YOURNAME/PortSync_Config/redirect.sh && \
 chmod +x /home/YOURNAME/PortSync_Config/redirect.sh
@@ -184,7 +136,7 @@ chmod +x /home/YOURNAME/PortSync_Config/launchPIA.sh
 # Create the alias_portsync.sh script
 echo '#!/bin/bash
 # Execute with passed arguments
-"$@" && touch /tmp/port_changer_trigger
+"$@" && touch /home/YOURNAME/PortSync_Config/port_changer.sh
 ' >/home/YOURNAME/PortSync_Config/alias_portsync.sh && \
 chmod +x /home/YOURNAME/PortSync_Config/alias_portsync.sh
 
@@ -192,12 +144,6 @@ chmod +x /home/YOURNAME/PortSync_Config/alias_portsync.sh
 if ! grep -q 'alias pia-client=' ~/.bashrc; then
   echo 'alias pia-client="/home/YOURNAME/PortSync_Config/alias_portsync.sh"' >> ~/.bashrc
 fi
-
-# Reload the systemd daemon and enable the services
-sudo systemctl daemon-reload
-sudo systemctl start port_changer.service
-sudo systemctl enable port_changer.service
-sudo systemctl enable launchPIA.path
 
 # Source the .bashrc to apply the alias
 source ~/.bashrc
