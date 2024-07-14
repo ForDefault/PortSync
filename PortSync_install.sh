@@ -123,12 +123,6 @@ fi
 chmod +x /home/YOURNAME/PortSync_Config/port_changer.sh
 
 
-
-# Create the launchPIA.sh script
-echo '#!/bin/bash
-screen -dmS pia_session nohup env XDG_SESSION_TYPE=x11 DISPLAY=:0 /opt/piavpn/bin/pia-client %u &> /dev/null' > /home/YOURNAME/PortSync_Config/launchPIA.sh && \
-chmod +x /home/YOURNAME/PortSync_Config/launchPIA.sh
-
 # Create the port_changer.service file
 sudo bash -c 'cat > /etc/systemd/system/port_changer.service <<EOF
 [Unit]
@@ -153,12 +147,13 @@ After=network.target
 
 [Service]
 Type=simple
-ExecStart=/home/YOURNAME/PortSync_Config/launchPIA.sh
+ExecStart=/home/YOURNAME/PortSync_Config/redirect.sh
 Restart=on-failure
 RestartSec=10
 User=YOURNAME
 Environment=XDG_SESSION_TYPE=x11
 Environment=DISPLAY=:0
+
 
 [Install]
 WantedBy=multi-user.target
@@ -175,6 +170,16 @@ PathExists=/tmp/launchPIA_trigger
 [Install]
 WantedBy=multi-user.target
 EOF'
+
+echo '#!/bin/bash
+su YOURNAME /home/YOURNAME/PortSync_Config/launchPIA.sh ' > /home/YOURNAME/PortSync_Config/redirect.sh && \
+chmod +x /home/YOURNAME/PortSync_Config/redirect.sh
+
+# Create the launchPIA.sh script
+echo '#!/bin/bash
+screen -dmS pia_session nohup env XDG_SESSION_TYPE=x11 DISPLAY=:0 /opt/piavpn/bin/pia-client %u &> /dev/null' > /home/YOURNAME/PortSync_Config/launchPIA.sh && \
+chmod +x /home/YOURNAME/PortSync_Config/launchPIA.sh
+
 
 # Create the alias_portsync.sh script
 echo '#!/bin/bash
