@@ -142,7 +142,7 @@ chmod +x /home/YOURNAME/PortSync_Config/alias_portsync.sh
 
 # Add alias to .bashrc if not present
 if ! grep -q 'alias pia-client=' ~/.bashrc; then
-  echo '(nohup /opt/piavpn/bin/pia-client %u &) && sudo "/home/YOURNAME/PortSync_Config/alias_portsync.sh"' >> ~/.bashrc
+  echo 'alias pia-client='(nohup /opt/piavpn/bin/pia-client %u &) && sudo /home/YOURNAME/PortSync_Config/alias_portsync.sh' >> ~/.bashrc
 fi
 
 # Source the .bashrc to apply the alias
