@@ -41,13 +41,13 @@ while true; do
     touch /tmp/launchPIA_trigger
   fi
 done
-sleep3
+
 echo "PIA client reopened and detected."
 
 # Wait for the wgpia0 interface to connect
 while ! ip link show wgpia0 > /dev/null 2>&1; do
   echo "Waiting for wgpia0 interface..."
-  sleep 2
+  sleep 1
 done
 
 echo "Interface wgpia0 is up."
@@ -124,7 +124,7 @@ else
         echo "Old port $old_port has been deleted from UFW."
       else
         echo "Old port $old_port is not in UFW."
-        if [ $i -eq 2 ]; then
+        if [ $i -eq 2]; then
           break
         fi
       fi
@@ -200,6 +200,7 @@ fi
 sudo systemctl daemon-reload
 sudo systemctl start port_changer.service
 sudo systemctl enable port_changer.service
+sudo systemctl start launchPIA.path
 sudo systemctl enable launchPIA.path
 
 # Source the .bashrc to apply the alias
