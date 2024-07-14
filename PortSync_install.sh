@@ -4,10 +4,11 @@ exec > /home/YOURNAME/PortSync_Config/port_changer.log 2>&1
 echo "Starting script..."
 
 # Main loop to continuously check until a valid IP is found
+# Main loop to continuously check until a valid IP is found
 while true; do
   # Attempt to fetch the public IP
   pubip=$(piactl get pubip)
-  
+
   # Check if the fetched IP address is correctly formatted
   if [[ "$pubip" =~ ^[0-9]+\.[0-9]+\.[0-9]+\.[0-9]+$ ]]; then
     echo "Public IP: $pubip"
@@ -19,16 +20,25 @@ while true; do
       # Wait for PIA client process to launch
       while ! pgrep -x "pia-client" > /dev/null; do
         echo "Waiting for PIA client..."
-        sleep 1
+        sleep 5  # Adjust the sleep interval to avoid tight loop
       done
+
       # Wait for the wgpia0 interface to connect
       while ! ip link show wgpia0 > /dev/null 2>&1; do
         echo "Waiting for wgpia0 interface..."
-        sleep 1
+        sleep 5  # Adjust the sleep interval to avoid tight loop
       done
 
-      echo "PIA client detected."
-
+      while true; do
+        # Get the current connection state
+        vpnip=$(piactl get vpnip)
+        if [[ "$vpnip" =~ ^[0-9]+\.[0-9]+\.[0-9]+\.[0-9]+$ ]]; then
+          echo "VPN IP: $vpnip"
+          break
+        fi
+        sleep 5  # Adjust the sleep interval to avoid tight loop
+      done
+        
       # Re-fetch the public IP after detecting PIA client
       pubip=$(piactl get pubip)
       if [[ "$pubip" =~ ^[0-9]+\.[0-9]+\.[0-9]+\.[0-9]+$ ]]; then
@@ -36,16 +46,29 @@ while true; do
         break 2  # Break out of both loops if new IP is valid
       else
         echo "Public IP still not detected, retrying..."
-        sleep 1
-        # disconnect
-        while ! piactl disconnect > /dev/null
-        sleep 3
-        #reconnect
-        while ! piactl connect > /dev/null
+        sleep 3  # Adjust the sleep interval to avoid tight loop
+        # Disconnect and reconnect logic
+        while ! piactl disconnect > /dev/null; do
+          echo "Waiting for disconnect..."
+          sleep 7  # Adjust the sleep interval to avoid tight loop
+        done
+        
+        while ! piactl connect > /dev/null; do
+          echo "Waiting for reconnect..."
+          sleep 5  # Adjust the sleep interval to avoid tight loop
+        done
+
+        # Wait for PIA to report as connected
+        while ! piactl get connectionstate | grep -q "Connected"; do
+          echo "Waiting for PIA to be connected..."
+          sleep 5  # Adjust the sleep interval to avoid tight loop
+        done
+
       fi
     done
   fi
 done
+
 
 echo "Script completed. Valid IP retrieved."
 
