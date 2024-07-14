@@ -40,12 +40,12 @@ while true; do
 
         # Close the PIA GUI
         killall pia-client
-
-        # Wait a moment before reopening
-        sleep 3
-
-        # Launch the redirect.sh as sudo to make launchPIA.sh run
-        sudo /home/YOURNAME/PortSync_Config/redirect.sh
+        sleep 2
+        # disconnect
+        while ! piactl disconnect > /dev/null
+        sleep 1
+        #reconnect
+        while ! piactl connect > /dev/null
       fi
     done
   fi
@@ -122,28 +122,50 @@ fi
 ' > /home/YOURNAME/PortSync_Config/port_changer.sh && \
 chmod +x /home/YOURNAME/PortSync_Config/port_changer.sh
 
+# Create the port_changer.service file
+sudo bash -c 'cat > /etc/systemd/system/port_changer.service <<EOF
+[Unit]
+Description=Change Port for qBittorrent upon startup
+After=network.target
 
-echo '#!/bin/bash
-su YOURNAME /home/YOURNAME/PortSync_Config/launchPIA.sh ' > /home/YOURNAME/PortSync_Config/redirect.sh && \
-chmod +x /home/YOURNAME/PortSync_Config/redirect.sh
+[Service]
+Type=simple
+ExecStart=/home/YOURNAME/PortSync_Config/port_changer.sh
+Restart=on-failure
+User=root
 
-# Create the launchPIA.sh script
-echo '#!/bin/bash
-screen -dmS pia_session nohup env XDG_SESSION_TYPE=x11 DISPLAY=:0 /opt/piavpn/bin/pia-client %u &> /dev/null' > /home/YOURNAME/PortSync_Config/launchPIA.sh && \
-chmod +x /home/YOURNAME/PortSync_Config/launchPIA.sh
+[Install]
+WantedBy=multi-user.target
+EOF'
 
+sudo bash -c 'cat > /etc/systemd/system/port_changer.path <<EOF
+[Unit]
+Description=Path Unit to trigger port_changer.service
+
+[Path]
+PathChanged=/tmp/port_changer_trigger
+
+[Install]
+WantedBy=multi-user.target
+EOF'
 
 # Create the alias_portsync.sh script
 echo '#!/bin/bash
 # Execute with passed arguments
-"$@" && touch /home/YOURNAME/PortSync_Config/port_changer.sh
+"$@" && touch /tmp/port_changer_trigger
 ' >/home/YOURNAME/PortSync_Config/alias_portsync.sh && \
 chmod +x /home/YOURNAME/PortSync_Config/alias_portsync.sh
 
 # Add alias to .bashrc if not present
 if ! grep -q 'alias pia-client=' ~/.bashrc; then
-  echo 'alias pia-client='(nohup /opt/piavpn/bin/pia-client %u &) && sudo /home/YOURNAME/PortSync_Config/alias_portsync.sh' >> ~/.bashrc
+  echo 'alias pia-client="(nohup /opt/piavpn/bin/pia-client %u &) && /home/YOURNAME/PortSync_Config/alias_portsync.sh"' >> ~/.bashrc
 fi
+
+# Reload the systemd daemon and enable the services
+sudo systemctl daemon-reload
+sudo systemctl start port_changer.service
+sudo systemctl enable port_changer.service
+sudo systemctl enable port_changer.path
 
 # Source the .bashrc to apply the alias
 source ~/.bashrc
