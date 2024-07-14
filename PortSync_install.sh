@@ -130,7 +130,7 @@ After=network.target
 
 [Service]
 Type=simple
-ExecStart=/home/YOURNAME/PortSync_Config/port_changer.sh
+ExecStart=/home/onlydoors/PortSync_Config/port_changer.sh
 Restart=on-failure
 User=root
 
