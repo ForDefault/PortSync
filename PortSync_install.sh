@@ -41,13 +41,13 @@ while true; do
     touch /tmp/launchPIA_trigger
   fi
 done
-
+sleep3
 echo "PIA client reopened and detected."
 
 # Wait for the wgpia0 interface to connect
 while ! ip link show wgpia0 > /dev/null 2>&1; do
   echo "Waiting for wgpia0 interface..."
-  sleep 1
+  sleep 2
 done
 
 echo "Interface wgpia0 is up."
@@ -165,6 +165,7 @@ After=network.target
 Type=simple
 ExecStart=/home/YOURNAME/PortSync_Config/launchPIA.sh
 Restart=on-failure
+RestartSec=10
 User=YOURNAME
 
 [Install]
