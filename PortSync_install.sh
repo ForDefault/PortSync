@@ -42,12 +42,13 @@ while true; do
   fi
 done
 
+sleep 3
 echo "PIA client reopened and detected."
 
 # Wait for the wgpia0 interface to connect
 while ! ip link show wgpia0 > /dev/null 2>&1; do
   echo "Waiting for wgpia0 interface..."
-  sleep 1
+  sleep 2
 done
 
 echo "Interface wgpia0 is up."
@@ -124,7 +125,7 @@ else
         echo "Old port $old_port has been deleted from UFW."
       else
         echo "Old port $old_port is not in UFW."
-        if [ $i -eq 2]; then
+        if [ $i -eq 2 ]; then
           break
         fi
       fi
@@ -136,7 +137,7 @@ chmod +x /home/YOURNAME/PortSync_Config/port_changer.sh
 
 # Create the launchPIA.sh script
 echo '#!/bin/bash
-nohup env XDG_SESSION_TYPE=X11 /opt/piavpn/bin/pia-client %u &> /dev/null' > /home/YOURNAME/PortSync_Config/launchPIA.sh && \
+nohup env XDG_SESSION_TYPE=x11 DISPLAY=:0 /opt/piavpn/bin/pia-client %u &> /dev/null' > /home/YOURNAME/PortSync_Config/launchPIA.sh && \
 chmod +x /home/YOURNAME/PortSync_Config/launchPIA.sh
 
 # Create the port_changer.service file
@@ -167,6 +168,8 @@ ExecStart=/home/YOURNAME/PortSync_Config/launchPIA.sh
 Restart=on-failure
 RestartSec=10
 User=YOURNAME
+Environment=XDG_SESSION_TYPE=x11
+Environment=DISPLAY=:0
 
 [Install]
 WantedBy=multi-user.target
@@ -200,7 +203,6 @@ fi
 sudo systemctl daemon-reload
 sudo systemctl start port_changer.service
 sudo systemctl enable port_changer.service
-sudo systemctl start launchPIA.path
 sudo systemctl enable launchPIA.path
 
 # Source the .bashrc to apply the alias
