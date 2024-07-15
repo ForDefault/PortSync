@@ -4,7 +4,9 @@
 
 >Currently only supports qBittorent
 
->Only Linux users who also use UFW as their firewall
+>Only Linux users utilizing UFW 
+.>>           <<.
+
 
 ## Automated to:
 
