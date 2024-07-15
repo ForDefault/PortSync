@@ -4,7 +4,8 @@
 
 >Currently only supports qBittorent
 
->Only Linux users utilizing UFW 
+>Only Linux users utilizing UFW
+
 .>>           <<.
 
 
