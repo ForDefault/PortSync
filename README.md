@@ -6,7 +6,7 @@
 
 >Only Linux users utilizing UFW
 
-.>>           <<.
+
 
 
 ## Automated to:
