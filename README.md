@@ -1,5 +1,5 @@
 # PortSync
-.>> Required: <<.
+**.>> Required: <<.**
 >Needs the GUI VPN PIA (Private Internet Access) to work - must be the GUI
 
 >Currently only supports qBittorent
