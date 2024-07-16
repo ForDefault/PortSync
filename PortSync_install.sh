@@ -169,10 +169,18 @@ WantedBy=multi-user.target
 EOF' && \
 
 
+# Create the alias_portsync.sh script
+echo '#!/bin/bash
+# Execute with passed arguments
+"$@" && touch /tmp/port_changer_trigger
+' >/home/YOURNAME/PortSync_Config/alias_portsync.sh && \
+chmod +x /home/YOURNAME/PortSync_Config/alias_portsync.sh && \
+
 # Add alias to .bashrc if not present
 if ! grep -q 'alias pia-client=' ~/.bashrc; then
-  echo 'alias pia-client="(nohup /opt/piavpn/bin/pia-client %u &) && touch /tmp/port_changer_trigger"' >> ~/.bashrc
+  echo 'alias pia-client="/home/YOURNAME/PortSync_Config/alias_portsync.sh"' >> ~/.bashrc
 fi
+
 
 
 # Reload the systemd daemon and enable the services
