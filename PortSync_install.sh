@@ -118,26 +118,33 @@ else
   echo "Port $port has been added to UFW."
 fi
 
-# Double-checking logic for old port removal
-if [ "$old_port" == "$port" ]; then
-  echo "Old Port same as New Port, no action needed for UFW removal."
-else
-  if [ "$old_port" != "$port" ]; then
-    for i in {1..3}; do
-      if sudo ufw status | grep -q "$old_port"; then
-        echo "Old port $old_port is in UFW. Deleting old port from UFW."
-        sudo ufw delete allow $old_port
-        echo "Old port $old_port has been deleted from UFW."
-      else
-        echo "Old port $old_port is not in UFW."
-        if [ $i -eq 2 ]; then
-          break
+if [ "$old_port" != "$port" ]; then
+    echo "Port has changed. Initiating check for old port removal..."
+    attempts=0
+    while [ $attempts -lt 3 ]; do
+        if sudo ufw status | grep -q "$old_port"; then
+            echo "Old port $old_port is still in UFW. Attempting to delete..."
+            sudo ufw delete allow $old_port
+            if ! sudo ufw status | grep -q "$old_port"; then
+                echo "Successfully deleted old port $old_port from UFW."
+                break
+            else
+                echo "Failed to delete old port $old_port. Retrying..."
+            fi
+        else
+            echo "Old port $old_port is not in UFW. No need for further action."
+            break
         fi
-      fi
-      sleep 1
+        ((attempts++))
+        sleep 1
     done
-  fi
+    if [ $attempts -eq 3 ]; then
+        echo "Failed to remove old port after three attempts."
+    fi
+else
+    echo "Old Port is the same as the new Port, no action needed for UFW removal."
 fi
+
 ' > /home/YOURNAME/PortSync_Config/port_changer.sh && \
 chmod +x /home/YOURNAME/PortSync_Config/port_changer.sh && \
 
