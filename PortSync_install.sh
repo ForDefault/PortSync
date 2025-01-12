@@ -1,81 +1,65 @@
-echo '#!/bin/bash
+cat <<'EOF' > /home/YOURNAME/PortSync_Config/port_changer.sh
+#!/bin/bash
 exec > /home/YOURNAME/PortSync_Config/port_changer.log 2>&1
+exec > >(tee /tmp/port_changer.log) 2>&1  # Output to both log file and terminal
+set -x  # Enable debug mode to print each command
 
 echo "Starting script..."
 
-# Main loop to continuously check until a valid IP is found
-# Main loop to continuously check until a valid IP is found
-while true; do
-  # Attempt to fetch the public IP
-  pubip=$(piactl get pubip)
+# Wait for PIA client process to launch
+while ! pgrep -x "pia-client" > /dev/null; do
+  echo "Waiting for PIA client..."
+  sleep 1
+done
+echo "PIA client detected."
 
-  # Check if the fetched IP address is correctly formatted
+# Wait for the wgpia0 interface to connect
+while ! ip link show wgpia0 > /dev/null 2>&1; do
+  echo "Waiting for wgpia0 interface..."
+  sleep 1
+done
+echo "Interface wgpia0 is up."
+
+sleep 3
+
+# Initial VPN connection and VPN IP validation
+echo "Performing initial VPN connection and IP checks..."
+connection_state=$(piactl get connectionstate)
+vpn_ip=$(piactl get vpnip)
+
+if [[ "$connection_state" != "Connected" || "$vpn_ip" == "Unknown" ]]; then
+  echo "Initial VPN connection or VPN IP not ready. Establishing connection..."
+  while true; do
+    connection_state=$(piactl get connectionstate)
+    vpn_ip=$(piactl get vpnip)
+
+    if [[ "$connection_state" == "Connected" && "$vpn_ip" != "Unknown" ]]; then
+      echo "VPN connection established, VPN IP: $vpn_ip"
+      break
+    else
+      echo "Waiting for VPN connection or VPN IP..."
+      sleep 5
+    fi
+  done
+fi
+
+# Main loop for Public IP, Port, and VPN IP
+while true; do
+  echo "Checking for Public IP..."
+  pubip=$(piactl get pubip)
   if [[ "$pubip" =~ ^[0-9]+\.[0-9]+\.[0-9]+\.[0-9]+$ ]]; then
     echo "Public IP: $pubip"
-    break  # Exit the main loop if IP is valid
+    break
   else
-    echo "Public IP not detected, starting retry logic..."
-    # Inner loop to handle retries when IP is not valid
-    while true; do
-      # Wait for PIA client process to launch
-      while ! pgrep -x "pia-client" > /dev/null; do
-        echo "Waiting for PIA client..."
-        sleep 5  # Adjust the sleep interval to avoid tight loop
-      done
-
-      # Wait for the wgpia0 interface to connect
-      while ! ip link show wgpia0 > /dev/null 2>&1; do
-        echo "Waiting for wgpia0 interface..."
-        sleep 5  # Adjust the sleep interval to avoid tight loop
-      done
-
-      while true; do
-        # Get the current connection state
-        vpnip=$(piactl get vpnip)
-        if [[ "$vpnip" =~ ^[0-9]+\.[0-9]+\.[0-9]+\.[0-9]+$ ]]; then
-          echo "VPN IP: $vpnip"
-          break
-        fi
-        sleep 5  # Adjust the sleep interval to avoid tight loop
-      done
-        
-      # Re-fetch the public IP after detecting PIA client
-      pubip=$(piactl get pubip)
-      if [[ "$pubip" =~ ^[0-9]+\.[0-9]+\.[0-9]+\.[0-9]+$ ]]; then
-        echo "Public IP: $pubip"
-        break 2  # Break out of both loops if new IP is valid
-      else
-        echo "Public IP still not detected, retrying..."
-        sleep 3  # Adjust the sleep interval to avoid tight loop
-        # Disconnect and reconnect logic
-        while ! piactl disconnect > /dev/null; do
-          echo "Waiting for disconnect..."
-          sleep 7  # Adjust the sleep interval to avoid tight loop
-        done
-        
-        while ! piactl connect > /dev/null; do
-          echo "Waiting for reconnect..."
-          sleep 5  # Adjust the sleep interval to avoid tight loop
-        done
-
-        # Wait for PIA to report as connected
-        while ! piactl get connectionstate | grep -q "Connected"; do
-          echo "Waiting for PIA to be connected..."
-          sleep 5  # Adjust the sleep interval to avoid tight loop
-        done
-
-      fi
-    done
+    echo "Public IP not detected, retrying..."
+    sleep 3
   fi
 done
-
-
-echo "Script completed. Valid IP retrieved."
 
 sleep 3
 
 # Retrieve the forwarded port using piactl
-port=$(sudo piactl get portforward)
+port=$(piactl get portforward)
 echo "Retrieved port: $port"
 
 # Update qBittorrent configuration file
@@ -89,63 +73,48 @@ mkdir -p "$old_port_path"
 old_port_file="$old_port_path/old.port.check.txt"
 
 # Check if old.port.check.txt exists
-if [ -f "$old_port_file" ]; then
-  echo "File old.port.check.txt exists."
-else
-  # If the file does not exist, create it with the current port
+if [ ! -f "$old_port_file" ]; then
   echo $port > "$old_port_file"
   echo "Created old.port.check.txt with port: $port"
 fi
 
 # Read the file and compare the port
 old_port=$(head -n 1 "$old_port_file")
-if [ "$old_port" == "$port" ]; then
-  echo "Port is the same, no action needed."
-else
-  # If the port is different, update the file
-  echo "Port is different. Updating old.port.check.txt."
-  old_port=$(head -n 1 "$old_port_file")
+if [ "$old_port" != "$port" ]; then
   echo -e "$port\nold.$old_port" > "$old_port_file"
   echo "Updated old.port.check.txt with new port: $port"
 fi
 
 # Check if the port is already allowed in UFW
-if sudo ufw status | grep -q "$port"; then
-  echo "Port $port is already allowed by UFW. No action needed."
-else
-  echo "Port $port is not allowed by UFW. Adding port to UFW."
+if ! sudo ufw status | grep -q "$port"; then
   sudo ufw allow $port
   echo "Port $port has been added to UFW."
 fi
 
+# Remove old port if different
 if [ "$old_port" != "$port" ]; then
-    echo "Port has changed. Initiating check for old port removal..."
-    attempts=0
-    while [ $attempts -lt 3 ]; do
-        if sudo ufw status | grep -q "$old_port"; then
-            echo "Old port $old_port is still in UFW. Attempting to delete..."
-            sudo ufw delete allow $old_port
-            if ! sudo ufw status | grep -q "$old_port"; then
-                echo "Successfully deleted old port $old_port from UFW."
-                break
-            else
-                echo "Failed to delete old port $old_port. Retrying..."
-            fi
-        else
-            echo "Old port $old_port is not in UFW. No need for further action."
-            break
-        fi
-        ((attempts++))
-        sleep 1
-    done
-    if [ $attempts -eq 3 ]; then
-        echo "Failed to remove old port after three attempts."
+  attempts=0
+  while [ $attempts -lt 3 ]; do
+    if sudo ufw status | grep -q "$old_port"; then
+      sudo ufw delete allow $old_port
+      if ! sudo ufw status | grep -q "$old_port"; then
+        echo "Successfully deleted old port $old_port from UFW."
+        break
+      else
+        echo "Retrying deletion of old port $old_port..."
+      fi
+    else
+      break
     fi
-else
-    echo "Old Port is the same as the new Port, no action needed for UFW removal."
+    ((attempts++))
+    sleep 1
+  done
 fi
+EOF
 
-' > /home/YOURNAME/PortSync_Config/port_changer.sh && \
+chmod +x /home/YOURNAME/PortSync_Config/port_changer.sh
+echo "alias port_changer='/home/YOURNAME/PortSync_Config/port_changer.sh'" >> ~/.bashrc
+source ~/.bashrc
 chmod +x /home/YOURNAME/PortSync_Config/port_changer.sh && \
 
 # Create the port_changer.service file
