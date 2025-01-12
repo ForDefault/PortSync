@@ -1,6 +1,5 @@
 cat <<'EOF' > /home/YOURNAME/PortSync_Config/port_changer.sh
 #!/bin/bash
-exec > /home/YOURNAME/PortSync_Config/port_changer.log 2>&1
 exec > >(tee /tmp/port_changer.log) 2>&1  # Output to both log file and terminal
 set -x  # Enable debug mode to print each command
 
@@ -22,27 +21,6 @@ echo "Interface wgpia0 is up."
 
 sleep 3
 
-# Initial VPN connection and VPN IP validation
-echo "Performing initial VPN connection and IP checks..."
-connection_state=$(piactl get connectionstate)
-vpn_ip=$(piactl get vpnip)
-
-if [[ "$connection_state" != "Connected" || "$vpn_ip" == "Unknown" ]]; then
-  echo "Initial VPN connection or VPN IP not ready. Establishing connection..."
-  while true; do
-    connection_state=$(piactl get connectionstate)
-    vpn_ip=$(piactl get vpnip)
-
-    if [[ "$connection_state" == "Connected" && "$vpn_ip" != "Unknown" ]]; then
-      echo "VPN connection established, VPN IP: $vpn_ip"
-      break
-    else
-      echo "Waiting for VPN connection or VPN IP..."
-      sleep 5
-    fi
-  done
-fi
-
 # Main loop for Public IP, Port, and VPN IP
 while true; do
   echo "Checking for Public IP..."
@@ -53,6 +31,62 @@ while true; do
   else
     echo "Public IP not detected, retrying..."
     sleep 3
+
+    # Inner loop for VPN connection and IP
+    while true; do
+      echo "Checking PIA connection state and VPN IP..."
+      connection_state=$(piactl get connectionstate)
+      vpn_ip=$(piactl get vpnip)
+
+      if [[ "$connection_state" == "Connected" ]]; then
+        if [[ "$vpn_ip" != "Unknown" ]]; then
+          echo "VPN IP assigned: $vpn_ip"
+          break
+        else
+          echo "VPN IP not yet assigned, waiting..."
+          sleep 5
+        fi
+      else
+        echo "PIA not connected, attempting reconnect..."
+        piactl disconnect && piactl connect
+        sleep 5
+
+        # Restart PIA client if reconnect fails
+        connection_state=$(piactl get connectionstate)
+        if [[ "$connection_state" != "Connected" ]]; then
+          echo "Reconnection failed. Restarting PIA client."
+          killall pia-client
+          nohup env XDG_SESSION_TYPE=X11 /opt/piavpn/bin/pia-client %u &
+          sleep 5
+
+          while ! ip link show wgpia0 > /dev/null 2>&1; do
+            echo "Waiting for wgpia0 interface..."
+            sleep 1
+          done
+          echo "Interface wgpia0 is up."
+        fi
+      fi
+    done
+
+    # Ensure PIA client is reopened if closed
+    while ! pgrep -x "pia-client" > /dev/null; do
+      echo "Reopening PIA client..."
+      nohup env XDG_SESSION_TYPE=X11 /opt/piavpn/bin/pia-client %u &
+      sleep 1
+    done
+    echo "PIA client reopened and detected."
+
+    # Re-check for Public IP after reconnect and before killing PIA client
+    pubip=$(piactl get pubip)
+    if [[ "$pubip" =~ ^[0-9]+\.[0-9]+\.[0-9]+\.[0-9]+$ ]]; then
+      echo "Public IP: $pubip"
+      break
+    else
+      echo "Public IP not detected after reconnect attempt, restarting PIA client..."
+      killall pia-client
+      nohup env XDG_SESSION_TYPE=X11 /opt/piavpn/bin/pia-client %u &
+      sleep 5
+    fi
   fi
 done
 
